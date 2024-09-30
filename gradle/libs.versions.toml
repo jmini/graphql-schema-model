@@ -1,0 +1,14 @@
+[versions]
+jackson = "2.16.2"
+junit = "5.10.4"
+
+[libraries]
+assertj-core = { module = "org.assertj:assertj-core", version = "3.11.1" }
+assertj-json-unit = { module = "net.javacrumbs.json-unit:json-unit-assertj", version = "2.38.0" }
+
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
+
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }

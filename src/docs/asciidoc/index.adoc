@@ -1,0 +1,118 @@
+:rootdir: ../../..
+:github-readme: {rootdir}/README.adoc
+:srcdir: {rootdir}/src/
+:listing-caption: Listing
+:revdate: {project-builddate}
+:revnumber: {project-version}
+
+include::{github-readme}[tags=vardef]
+
+:projectpage: https://github.com/{gh-repo-owner}/{gh-repo-name}
+
+include::{github-readme}[tags=header]
+
+== URLs
+
+* link:{homepage}[Project home] (this page)
+* link:{projectpage}[GitHub project]
+* link:{issues}[Issue tracker]
+
+TIP: Do you want to improve this page? Please git-link:self[edit it on GitHub, edit].
+
+== Usage
+
+The library is hosted on maven central:
+
+[source, xml, subs="verbatim,attributes"]
+.Maven coordinates of the project (xml notation)
+----
+<dependency>
+  <groupId>{maven-group-id}</groupId>
+  <artifactId>{maven-artifact-id}</artifactId>
+  <version>{last-stable-versions}</version>
+</dependency>
+----
+
+[source, xml, subs="verbatim,attributes"]
+.Maven coordinates of the project (single line notation)
+----
+{maven-group-id}:{maven-artifact-id}:{last-stable-versions}
+----
+
+Run the git-link:scripts/introspection-query.qraphql[instrospection query] and use the model classes that correspond to the returned JSON.
+
+== Source Code
+
+As for any java project, the source code of the plugin is available in the git-link:src/[src/] folder.
+
+=== Build
+
+This project is using gradle.
+
+Command to build the sources locally:
+
+----
+./gradlew build
+----
+
+Command to run the tool locally, passing the `--help` argument to the application:
+
+----
+./gradlew run --args="--help"
+----
+
+Command to deploy to your local maven repository:
+
+----
+./gradlew publishToMavenLocal
+----
+
+Command to build the documentation page:
+
+----
+./gradlew asciidoctor
+----
+
+The output of this command is an HTML page located at `<git repo root>/build/docs/html5/index.html`.
+
+==== For project maintainers
+
+Following properties are expected to be set (for example in `~/.gradle/gradle.properties`):
+
+* `signing.gnupg.keyName` 
+* `signing.gnupg.passphrase`
+* `ossSonatypeUsername`
+* `ossSonatypePassword`
+
+Command to upload the documentation page on GitHub pages:
+
+----
+./gradlew gitPublishPush
+----
+
+Command to perform a release:
+
+----
+./gradlew release -Prelease.useAutomaticVersion=true
+----
+
+==== Using ssh-agent
+
+Some tasks requires to push into the distant git repository (release task or updating the `gh-pages` branch).
+If they are failing with errors like this:
+----
+org.eclipse.jgit.api.errors.TransportException: ... Permission denied (publickey).
+---- 
+
+Then `ssh-agent` can be used.
+----
+eval `ssh-agent -s`
+ssh-add ~/.ssh/id_rsa
+----
+(link:https://superuser.com/a/990447/[source] for this approach)
+
+
+include::{github-readme}[tags=contact-section]
+
+include::{github-readme}[tags=license-section]
+

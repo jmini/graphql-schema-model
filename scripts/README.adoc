@@ -1,0 +1,22 @@
+== Scripts
+
+=== Jbang script
+
+Jbang script to run the introspection query against a given endepoint.
+
+```
+jbang RunIntrospectionQuery.java https://gitlab.com/api/graphql --output ../src/test/resources/gitlab-graphqlschema.json --pretty
+jbang RunIntrospectionQuery.java https://swapi-graphql.netlify.app/.netlify/functions/index --output ../src/test/resources/swapi-graphqlschema.json --pretty
+jbang RunIntrospectionQuery.java https://api.github.com/graphql --header Authorization="Bearer github_pat_****" --output ../src/test/resources/github-graphqlschema.json --pretty
+
+jbang RunIntrospectionQuery.java http://localhost:8080/graphql --output ../src/test/resources/superheroes-graphqlschema.json --pretty
+```
+
+The superheroes GraphQL server is available on GitHub https://github.com/jmini/quarkus-graphql-superheroes/[jmini/quarkus-graphql-superheroes]
+
+=== Introspection query
+
+The file `introspection-query.qraphql` contains the introspection query used with this library.
+This query is compatible with a lot of servers.
+
+The file `introspection-query2.qraphql` contains a more modern query that ask for more attributes that some older server are not able to provide.

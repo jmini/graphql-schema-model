@@ -1,0 +1,223 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'org.ajoberstar.git-publish' version '5.1.1'
+    id 'com.diffplug.spotless' version '6.1.0'
+    id 'org.jreleaser' version '1.19.0'
+    id 'net.researchgate.release' version '3.1.0'
+}
+
+wrapper {
+    gradleVersion = '8.14.2'
+}
+
+String groupId = 'fr.jmini.graphql'
+group = groupId
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation libs.jackson.databind
+    testImplementation libs.junit.api
+    testImplementation libs.assertj.core
+    testImplementation libs.assertj.json.unit
+    testRuntimeOnly libs.junit.engine
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'GraphQL Schema Model'
+                description = 'Java model for the GraphQL introspection query'
+                packaging = 'jar'
+                url = 'https://' + "$githubRepositoryOwner" + '.github.io/' + "$githubRepositoryName" + '/'
+                licenses {
+                    license {
+                        name = 'Apache 2.0 License'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'jmini'
+                        url = 'https://github.com/orgs/' + "$githubRepositoryOwner" + '/people'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/' + "$githubRepositoryOwner" + '/' + "$githubRepositoryName" + '.git'
+                    developerConnection = 'scm:git:https://github.com/' + "$githubRepositoryOwner" + '/' + "$githubRepositoryName" + '.git'
+                    url = 'https://github.com/' + "$githubRepositoryOwner" + '/' + "$githubRepositoryName" + '/'
+                }
+            }
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+def buildDate() {
+    return new Date().format('yyyy-MM-dd')
+}
+
+configurations {
+    asciidoctorExtensions
+}
+
+asciidoctorj {
+    version = "$asciidoctorjVersion"
+}
+
+asciidoctor {
+    configurations 'asciidoctorExtensions'
+    sourceDir = file('src/docs/asciidoc')
+    baseDirFollowsSourceFile()
+    outputDir = file('build/docs/html5')
+    attributes = ['revdate'             : "${buildDate()}",
+                  'project-version'     : "$version",
+                  'maven-group-id'      : "$groupId",
+                  'maven-artifact-id'   : "${project.name}",
+                  'last-stable-version' : "$lastVersion",
+                  'attribute-missing'   : 'warn',
+                  'source-highlighter'  : 'coderay',
+                  'imagesdir'           : '',
+                  'toc'                 : 'left',
+                  'icons'               : 'font',
+                  'toclevels'           : '3',
+                  'sectanchors'         : 'true',
+                  'idprefix'            : '',
+                  'idseparator'         : '-',
+                  'docinfo1'            : 'true']
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        asciidoctorExtensions 'fr.jmini.asciidoctorj:git-link:3.2.2'
+    }
+}
+
+gitPublish {
+    repoUri = 'git@github.com:' + "$githubRepositoryOwner" + '/' + "$githubRepositoryName" + '.git'
+    branch = 'gh-pages'
+
+    contents {
+        from "${file('build/docs/html5')}"
+    }
+
+    preserve {
+        include '.nojekyll'
+        exclude '.DS_Store'
+    }
+
+    commitMessage = "Update the 'gh-pages' branch."
+}
+
+spotless {
+  java {
+    importOrder 'java', 'javax', 'org', 'com', ''
+    removeUnusedImports()
+
+    // available versions are: https://github.com/diffplug/spotless/tree/master/lib-extra/src/main/resources/com/diffplug/spotless/extra/eclipse_jdt_formatter
+    eclipse('4.13.0').configFile('.settings/org.eclipse.jdt.core.prefs')
+  }
+}
+
+jreleaser {
+    signing {
+        active = 'RELEASE'
+        armored = true
+    }
+    release {
+        github {
+            enabled = true
+            repoOwner = "$githubRepositoryOwner"
+            name = "$githubRepositoryName"
+            tagName = '{{projectVersion}}'
+            overwrite = true
+            skipTag = true
+            releaseNotes {
+                enabled = true
+            }
+            changelog {
+                enabled = false
+            }
+            milestone {
+                close = true
+            }
+            issues {
+                enabled = true
+                comment = 'This issue has been resolved in `{{tagName}}` ([Release Notes]({{releaseNotesUrl}}))'
+                applyMilestone = 'ALWAYS'
+
+                label {
+                    name = 'released'
+                    color = '#FF0000'
+                    description = 'Issue has been released'
+                }
+            }
+        }
+    }
+}
+
+release {
+    buildTasks = [
+        'checkLastVersionValue',
+        'clean', 
+        'publish',
+        'jreleaserDeploy',
+        'asciidoctor',
+        'gitPublishPush'
+    ]
+    git {
+        requireBranch.set('main')
+    }
+}
+
+tasks.register('checkLastVersionValue') {
+    doLast {
+        if(version.endsWith('SNAPSHOT')) {
+            throw new GradleException("version '$version' ends with SNAPSHOT, this is not a release build!")
+        }
+        if(lastVersion != version) {
+            throw new GradleException("lastVersion '$lastVersion' does not match version '$version', fix it in the 'gradle.properties' file.")
+        }
+    }
+}
+
+def updateLastVersionValueTask = tasks.register('updateLastVersionValue') {
+    doLast {
+        def propertiesFile = file('gradle.properties')
+        def content = propertiesFile.text
+        def newVersion = project.findProperty('release.releaseVersion') ?: version.replace('-SNAPSHOT', '')
+        content = content.replaceAll("lastVersion=[0-9a-z\\.\\-]+", "lastVersion=" + newVersion)
+        propertiesFile.text = content
+    }
+}
+
+model {
+    tasks.unSnapshotVersion {
+        dependsOn updateLastVersionValueTask
+    }
+    tasks.gitPublishCopy {
+        dependsOn asciidoctor
+    }
+}
