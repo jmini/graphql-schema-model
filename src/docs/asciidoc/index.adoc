@@ -29,14 +29,14 @@ The library is hosted on maven central:
 <dependency>
   <groupId>{maven-group-id}</groupId>
   <artifactId>{maven-artifact-id}</artifactId>
-  <version>{last-stable-versions}</version>
+  <version>{last-stable-version}</version>
 </dependency>
 ----
 
 [source, xml, subs="verbatim,attributes"]
 .Maven coordinates of the project (single line notation)
 ----
-{maven-group-id}:{maven-artifact-id}:{last-stable-versions}
+{maven-group-id}:{maven-artifact-id}:{last-stable-version}
 ----
 
 Run the git-link:scripts/introspection-query.qraphql[instrospection query] and use the model classes that correspond to the returned JSON.
