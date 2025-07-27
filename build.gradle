@@ -39,6 +39,7 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+def repositoryPath = 'build/staging-deploy'
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -70,7 +71,7 @@ publishing {
     }
     repositories {
         maven {
-            url = layout.buildDirectory.dir('staging-deploy')
+            url = rootProject.file(repositoryPath)
         }
     }
 }
@@ -153,7 +154,7 @@ jreleaser {
                     active = 'RELEASE'
                     namespace = 'fr.jmini'
                     url = 'https://central.sonatype.com/api/v1/publisher'
-                    stagingRepository('build/staging-deploy')
+                    stagingRepository(repositoryPath)
                     retryDelay = 30
                     maxRetries = 150
                 }
