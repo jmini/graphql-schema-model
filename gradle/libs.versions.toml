@@ -1,6 +1,6 @@
 [versions]
 jackson = "2.16.2"
-junit = "5.10.4"
+junit = "5.13.4"
 
 [libraries]
 assertj-core = { module = "org.assertj:assertj-core", version = "3.11.1" }
